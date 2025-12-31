@@ -114,16 +114,9 @@ interface AttendanceRecord {
 //     location: "Office",
 //   },
 // ];
-const formatDate = (date: Date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
-
 const generateDummyAttendance = () => {
-  const data: AttendanceRecord[] = [];
   const today = new Date();
+  const data: AttendanceRecord[] = [];
 
   const generateMonth = (offset: number) => {
     const base = new Date();
@@ -139,23 +132,29 @@ const generateDummyAttendance = () => {
       // Skip weekends
       if (date.getDay() === 0 || date.getDay() === 6) continue;
 
+      const dateStr = date.toISOString().split("T")[0];
       const isToday = date.toDateString() === new Date().toDateString();
 
-      const rand = Math.random();
+      // Smart probability system
+      const random = Math.random();
+
       let status: AttendanceRecord["status"] = "present";
 
       if (!isToday) {
-        if (rand < 0.1) status = "absent";
-        else if (rand < 0.25) status = "half-day";
-        else if (rand < 0.4) status = "late";
+        if (random < 0.1) status = "absent"; // 10%
+        else if (random < 0.2) status = "half-day"; // 10%
+        else if (random < 0.35) status = "late"; // 15%
+        else status = "present"; // 65%
       }
 
       data.push({
-        date: formatDate(date),
+        date: dateStr,
         status,
         checkIn:
           status === "absent"
             ? undefined
+            : status === "half-day"
+            ? "09:30"
             : status === "late"
             ? "10:15"
             : "09:00",
@@ -171,16 +170,16 @@ const generateDummyAttendance = () => {
           status === "absent"
             ? "On leave"
             : status === "half-day"
-            ? "Left early"
+            ? "Left early for personal work"
             : status === "late"
             ? "Traffic delay"
-            : "Regular workday",
+            : "Regular work day",
         location: status === "absent" ? "Home" : "Office",
       });
     }
   };
 
-  // ✅ CURRENT + PREVIOUS TWO MONTHS
+  // Current + previous 2 months
   generateMonth(0);
   generateMonth(1);
   generateMonth(2);
