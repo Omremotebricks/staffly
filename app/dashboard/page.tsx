@@ -8,6 +8,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import LeaveForm from '../components/LeaveForm';
 import LeaveRequestsList from '../components/LeaveRequestsList';
 import EmployeeManagement from '../components/EmployeeManagement';
+import AttendanceCalendar from '../components/AttendanceCalendar';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -93,7 +94,8 @@ export default function Dashboard() {
     const baseTabs = [
       { id: 'overview', name: 'Overview' },
       { id: 'apply', name: 'Apply Leave' },
-      { id: 'requests', name: 'My Requests' }
+      { id: 'requests', name: 'My Requests' },
+      { id: 'attendance', name: 'Attendance' }
     ];
 
     if (user?.role === 'hr' || user?.role === 'admin') {
@@ -213,6 +215,10 @@ export default function Dashboard() {
             onReject={handleReject}
             canManage={false}
           />
+        )}
+
+        {activeTab === 'attendance' && (
+          <AttendanceCalendar />
         )}
 
         {activeTab === 'manage' && (user?.role === 'hr' || user?.role === 'admin') && (
