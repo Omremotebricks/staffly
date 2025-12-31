@@ -261,7 +261,7 @@ export default function AttendanceCalendar() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
             <div>
               <p className="text-sm text-gray-600">Present</p>
@@ -270,7 +270,7 @@ export default function AttendanceCalendar() {
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
             <div>
               <p className="text-sm text-gray-600">Absent</p>
@@ -279,7 +279,7 @@ export default function AttendanceCalendar() {
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
             <div>
               <p className="text-sm text-gray-600">Late</p>
@@ -288,7 +288,7 @@ export default function AttendanceCalendar() {
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
             <div>
               <p className="text-sm text-gray-600">Half Day</p>
@@ -298,9 +298,12 @@ export default function AttendanceCalendar() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
         {/* Calendar */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+        <div
+          className="lg:col-span-2 bg-white p-6 rounded-lg shadow"
+          style={{ maxHeight: "450px" }}
+        >
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Attendance Calendar
           </h3>
@@ -336,7 +339,10 @@ export default function AttendanceCalendar() {
         </div>
 
         {/* Selected Date Details */}
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div
+          className="bg-white p-6 rounded-lg shadow thin-scroll"
+          style={{ maxHeight: "450px", overflowY: "auto" }}
+        >
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             {selectedDate.toLocaleDateString("en-US", {
               weekday: "long",
