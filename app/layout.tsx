@@ -1,5 +1,7 @@
 import "./globals.css";
-import { AuthProvider } from './lib/auth';
+import { AuthProvider } from "./lib/auth";
+import { ToastProvider } from "./components/ToastContext";
+import { ConfirmationProvider } from "./components/ConfirmationContext";
 
 export default function RootLayout({
   children,
@@ -10,7 +12,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          {children}
+          <ConfirmationProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </ConfirmationProvider>
         </AuthProvider>
       </body>
     </html>
