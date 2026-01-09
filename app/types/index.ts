@@ -4,9 +4,10 @@ export interface User {
   name: string;
   email: string;
   department: string;
-  role: 'employee' | 'hr' | 'admin';
+  role: "employee" | "hr" | "admin";
   hodEmail?: string;
   isActive: boolean;
+  can_create_forms?: boolean; // Permission to create/edit forms
 }
 
 export interface LeaveRequest {
@@ -15,12 +16,12 @@ export interface LeaveRequest {
   employeeName: string;
   department: string;
   hodEmail: string;
-  leaveType: 'CL' | 'PL' | 'LWP' | 'Comp OFF';
+  leaveType: "CL" | "PL" | "LWP" | "Comp OFF";
   fromDate: string;
   toDate: string;
   numberOfDays: number;
   reason: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   appliedDate: string;
   approvedBy?: string;
   approvedDate?: string;
