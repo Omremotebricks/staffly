@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import { useState, useRef } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 
 interface AttendanceRecord {
   date: string;
@@ -115,7 +116,6 @@ interface AttendanceRecord {
 //   },
 // ];
 const generateDummyAttendance = () => {
-  const today = new Date();
   const data: AttendanceRecord[] = [];
 
   const generateMonth = (offset: number) => {
@@ -192,9 +192,11 @@ export default function AttendanceCalendar() {
   const [attendanceData] = useState<AttendanceRecord[]>(
     generateDummyAttendance()
   );
+  const calendarRef = useRef<FullCalendar>(null);
 
-  const getAttendanceForDate = (date: Date): AttendanceRecord | undefined => {
-    const dateStr = date.toISOString().split("T")[0];
+  const getAttendanceForDate = (
+    dateStr: string
+  ): AttendanceRecord | undefined => {
     return attendanceData.find((record) => record.date === dateStr);
   };
 
@@ -228,19 +230,31 @@ export default function AttendanceCalendar() {
     }
   };
 
-  const tileContent = ({ date }: { date: Date }) => {
-    const attendance = getAttendanceForDate(date);
-    if (attendance) {
-      return (
+  const events = attendanceData.map((record) => ({
+    start: record.date,
+    allDay: true,
+    display: "background",
+    backgroundColor: "transparent", // background events used for custom rendering
+    extendedProps: { ...record },
+  }));
+
+  const renderEventContent = (eventInfo: any) => {
+    const record = eventInfo.event.extendedProps as AttendanceRecord;
+    return (
+      <div className="flex justify-center items-center h-full pt-1">
         <div
-          className={`status-dot ${getStatusColor(attendance.status)}`}
+          className={`w-2 h-2 rounded-full ${getStatusColor(record.status)}`}
         ></div>
-      );
-    }
-    return null;
+      </div>
+    );
   };
 
-  const selectedDateAttendance = getAttendanceForDate(selectedDate);
+  const handleDateClick = (arg: any) => {
+    setSelectedDate(arg.date);
+  };
+
+  const selectedDateStr = selectedDate.toISOString().split("T")[0];
+  const selectedDateAttendance = getAttendanceForDate(selectedDateStr);
 
   const getAttendanceStats = () => {
     const present = attendanceData.filter((r) => r.status === "present").length;
@@ -259,90 +273,70 @@ export default function AttendanceCalendar() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-            <div>
-              <p className="text-sm text-gray-600">Present</p>
-              <p className="text-xl font-semibold">{stats.present}</p>
+        {[
+          { label: "Present", value: stats.present, color: "bg-green-500" },
+          { label: "Absent", value: stats.absent, color: "bg-red-500" },
+          { label: "Late", value: stats.late, color: "bg-yellow-500" },
+          { label: "Half Day", value: stats.halfDay, color: "bg-blue-500" },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 ${stat.color} rounded-full mr-2`}></div>
+              <div>
+                <p className="text-sm text-gray-600">{stat.label}</p>
+                <p className="text-xl font-semibold">{stat.value}</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-            <div>
-              <p className="text-sm text-gray-600">Absent</p>
-              <p className="text-xl font-semibold">{stats.absent}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-            <div>
-              <p className="text-sm text-gray-600">Late</p>
-              <p className="text-xl font-semibold">{stats.late}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-            <div>
-              <p className="text-sm text-gray-600">Half Day</p>
-              <p className="text-xl font-semibold">{stats.halfDay}</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
         {/* Calendar */}
-        <div
-          className="lg:col-span-2 bg-white p-6 rounded-lg shadow"
-          style={{ maxHeight: "450px" }}
-        >
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Attendance Calendar
           </h3>
-          <div className="attendance-calendar">
-            <Calendar
-              onChange={(value) => setSelectedDate(value as Date)}
-              value={selectedDate}
-              tileContent={tileContent}
-              formatShortWeekday={(locale, date) =>
-                date.toLocaleDateString("en-IN", { weekday: "short" })
-              }
-              className="w-full"
+          <div className="attendance-calendar fullcalendar-container">
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              events={events}
+              dateClick={handleDateClick}
+              eventContent={renderEventContent}
+              headerToolbar={{
+                left: "prev,next today",
+                center: "title",
+                right: "",
+              }}
+              height="auto"
+              selectable={true}
             />
           </div>
           <div className="mt-4 flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-              <span>Present</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-              <span>Absent</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-              <span>Late</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-              <span>Half Day</span>
-            </div>
+            {[
+              { label: "Present", color: "bg-green-500" },
+              { label: "Absent", color: "bg-red-500" },
+              { label: "Late", color: "bg-yellow-500" },
+              { label: "Half Day", color: "bg-blue-500" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center">
+                <div
+                  className={`w-3 h-3 ${item.color} rounded-full mr-2`}
+                ></div>
+                <span>{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Selected Date Details */}
         <div
-          className="bg-white p-6 rounded-lg shadow thin-scroll"
-          style={{ maxHeight: "450px", overflowY: "auto" }}
+          className="bg-white p-6 rounded-lg shadow thin-scroll h-full"
+          style={{ maxHeight: "600px", overflowY: "auto" }}
         >
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 border-b pb-2">
             {selectedDate.toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
@@ -353,49 +347,47 @@ export default function AttendanceCalendar() {
 
           {selectedDateAttendance ? (
             <div className="space-y-4">
-              <div className="flex items-center">
+              <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                 <div
                   className={`w-4 h-4 rounded-full mr-3 ${getStatusColor(
                     selectedDateAttendance.status
                   )}`}
                 ></div>
-                <span className="font-medium">
+                <span className="font-semibold text-lg">
                   {getStatusText(selectedDateAttendance.status)}
                 </span>
               </div>
 
-              {selectedDateAttendance.location && (
-                <div>
-                  <p className="text-sm text-gray-600">Location</p>
-                  <p className="font-medium">
-                    {selectedDateAttendance.location}
-                  </p>
-                </div>
-              )}
-
-              {selectedDateAttendance.checkIn && (
-                <div>
-                  <p className="text-sm text-gray-600">Check In</p>
-                  <p className="font-medium">
-                    {selectedDateAttendance.checkIn}
-                  </p>
-                </div>
-              )}
-
-              {selectedDateAttendance.checkOut && (
-                <div>
-                  <p className="text-sm text-gray-600">Check Out</p>
-                  <p className="font-medium">
-                    {selectedDateAttendance.checkOut}
-                  </p>
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedDateAttendance.checkIn && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold">
+                      Check In
+                    </p>
+                    <p className="font-medium text-gray-900">
+                      {selectedDateAttendance.checkIn}
+                    </p>
+                  </div>
+                )}
+                {selectedDateAttendance.checkOut && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold">
+                      Check Out
+                    </p>
+                    <p className="font-medium text-gray-900">
+                      {selectedDateAttendance.checkOut}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {selectedDateAttendance.checkIn &&
                 selectedDateAttendance.checkOut && (
-                  <div>
-                    <p className="text-sm text-gray-600">Total Hours</p>
-                    <p className="font-medium">
+                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                    <p className="text-xs text-blue-600 uppercase font-bold">
+                      Total Hours
+                    </p>
+                    <p className="text-xl font-bold text-blue-900">
                       {(() => {
                         const checkIn = new Date(
                           `2024-01-01 ${selectedDateAttendance.checkIn}`
@@ -406,21 +398,38 @@ export default function AttendanceCalendar() {
                         const diff =
                           (checkOut.getTime() - checkIn.getTime()) /
                           (1000 * 60 * 60);
-                        return `${diff.toFixed(1)} hours`;
+                        return `${diff.toFixed(1)} hrs`;
                       })()}
                     </p>
                   </div>
                 )}
 
+              {selectedDateAttendance.location && (
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold">
+                    Location
+                  </p>
+                  <p className="font-medium flex items-center gap-1">
+                    <span className="text-gray-400">📍</span>{" "}
+                    {selectedDateAttendance.location}
+                  </p>
+                </div>
+              )}
+
               {selectedDateAttendance.tasks &&
                 selectedDateAttendance.tasks.length > 0 && (
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Tasks</p>
-                    <ul className="space-y-1">
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-2">
+                      Tasks Completed
+                    </p>
+                    <ul className="space-y-2">
                       {selectedDateAttendance.tasks.map((task, index) => (
-                        <li key={index} className="text-sm flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          <span>{task}</span>
+                        <li
+                          key={index}
+                          className="text-sm flex items-start bg-green-50 p-2 rounded border border-green-100"
+                        >
+                          <span className="text-green-500 mr-2">✓</span>
+                          <span className="text-green-900">{task}</span>
                         </li>
                       ))}
                     </ul>
@@ -430,12 +439,17 @@ export default function AttendanceCalendar() {
               {selectedDateAttendance.meetings &&
                 selectedDateAttendance.meetings.length > 0 && (
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Meetings</p>
-                    <ul className="space-y-1">
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-2">
+                      Meetings
+                    </p>
+                    <ul className="space-y-2">
                       {selectedDateAttendance.meetings.map((meeting, index) => (
-                        <li key={index} className="text-sm flex items-start">
-                          <span className="text-blue-500 mr-2">📅</span>
-                          <span>{meeting}</span>
+                        <li
+                          key={index}
+                          className="text-sm flex items-start bg-purple-50 p-2 rounded border border-purple-100"
+                        >
+                          <span className="text-purple-500 mr-2">📅</span>
+                          <span className="text-purple-900">{meeting}</span>
                         </li>
                       ))}
                     </ul>
@@ -443,26 +457,60 @@ export default function AttendanceCalendar() {
                 )}
 
               {selectedDateAttendance.notes && (
-                <div>
-                  <p className="text-sm text-gray-600">Notes</p>
-                  <p className="text-sm bg-gray-50 p-2 rounded italic">
-                    {selectedDateAttendance.notes}
+                <div className="border-t pt-3">
+                  <p className="text-xs text-gray-500 uppercase font-bold mb-1">
+                    Notes
+                  </p>
+                  <p className="text-sm text-gray-700 italic bg-yellow-50 p-3 rounded-lg border border-yellow-100 shadow-sm">
+                    "{selectedDateAttendance.notes}"
                   </p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-gray-500">
-              <p>No attendance record for this date</p>
-              <div className="mt-4 space-y-2">
-                <p className="text-sm">📝 No tasks scheduled</p>
-                <p className="text-sm">📅 No meetings planned</p>
-                <p className="text-sm">💭 No notes available</p>
+            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+              <div className="text-4xl mb-2">📭</div>
+              <p className="font-medium text-center">
+                No attendance record for this date
+              </p>
+              <div className="mt-8 w-full space-y-3 opacity-50">
+                <div className="h-4 bg-gray-100 rounded w-3/4 mx-auto"></div>
+                <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto"></div>
               </div>
             </div>
           )}
         </div>
       </div>
+      <style jsx global>{`
+        .fullcalendar-container .fc {
+          max-width: 100%;
+          font-family: inherit;
+        }
+        .fullcalendar-container .fc-toolbar-title {
+          font-size: 1.2rem !important;
+          font-weight: 600;
+        }
+        .fullcalendar-container .fc-button {
+          background-color: #3b82f6 !important;
+          border: none !important;
+          text-transform: capitalize;
+        }
+        .fullcalendar-container .fc-button:hover {
+          background-color: #2563eb !important;
+        }
+        .fullcalendar-container .fc-day-today {
+          background-color: #eff6ff !important;
+        }
+        .fullcalendar-container .fc-daygrid-day-top {
+          flex-direction: column;
+        }
+        .fullcalendar-container .fc-daygrid-event-harness {
+          margin: 0 !important;
+        }
+        .fullcalendar-container .fc-scroller {
+          overflow: hidden !important;
+        }
+      `}</style>
     </div>
   );
 }
