@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FormBuilderProvider,
@@ -71,7 +71,9 @@ function FormBuilderPageContent() {
 export default function NewFormPage() {
   return (
     <FormBuilderProvider>
-      <FormBuilderPageContent />
+      <Suspense fallback={<Loader fullPage label="Loading builder..." />}>
+        <FormBuilderPageContent />
+      </Suspense>
     </FormBuilderProvider>
   );
 }
