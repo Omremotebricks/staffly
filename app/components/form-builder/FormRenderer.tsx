@@ -3,10 +3,9 @@
 import React, { useState } from "react";
 import { Form, FormField } from "../../types/forms";
 import { useRouter } from "next/navigation";
-import { useToast } from "../ToastContext";
+import { toast } from "sonner";
 
 export default function FormRenderer({ form }: { form: Form }) {
-  const { showToast } = useToast();
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
@@ -29,11 +28,11 @@ export default function FormRenderer({ form }: { form: Form }) {
 
       if (!res.ok) throw new Error("Submission failed");
 
-      showToast("Form submitted successfully!", "success");
+      toast.success("Form submitted successfully!");
       router.push("/");
     } catch (error) {
       console.error(error);
-      showToast("Error submitting form", "error");
+      toast.error("Error submitting form");
     } finally {
       setSubmitting(false);
     }

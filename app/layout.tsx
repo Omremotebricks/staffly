@@ -1,6 +1,6 @@
 import "./globals.css";
 import { AuthProvider } from "./lib/auth";
-import { ToastProvider } from "./components/ToastContext";
+import { Toaster } from "sonner";
 import { ConfirmationProvider } from "./components/ConfirmationContext";
 
 export default function RootLayout({
@@ -13,7 +13,8 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <ConfirmationProvider>
-            <ToastProvider>{children}</ToastProvider>
+            {children}
+            <Toaster position="top-right" richColors closeButton />
           </ConfirmationProvider>
         </AuthProvider>
       </body>

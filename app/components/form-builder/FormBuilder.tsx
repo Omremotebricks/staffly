@@ -5,7 +5,7 @@ import { useFormBuilder } from "./FormBuilderContext";
 import FieldEditor from "./FieldEditor";
 import FieldToolbox from "./FieldToolbox";
 import { useRouter } from "next/navigation";
-import { useToast } from "../ToastContext";
+import { toast } from "sonner";
 
 export default function FormBuilder({
   formId,
@@ -14,7 +14,6 @@ export default function FormBuilder({
   formId?: string;
   userRole?: string;
 }) {
-  const { showToast } = useToast();
   const {
     title,
     setTitle,
@@ -33,13 +32,13 @@ export default function FormBuilder({
   const handleSave = async (status: "draft" | "published" = "draft") => {
     // Enforce at least one field for publication
     if (status === "published" && fields.length === 0) {
-      showToast("Please add at least one field before publishing.", "warning");
+      toast.warning("Please add at least one field before publishing.");
       return;
     }
 
     // Non-admins can only save as draft
     if (!isAdmin && status === "published") {
-      showToast("Only administrators can publish forms.", "error");
+      toast.error("Only administrators can publish forms.");
       return;
     }
 
@@ -68,11 +67,11 @@ export default function FormBuilder({
       const data = await res.json();
 
       // Redirect to dashboard after saving
-      showToast("Form saved successfully!", "success");
+      toast.success("Form saved successfully!");
       router.push("/");
     } catch (error) {
       console.error(error);
-      showToast("Error saving form", "error");
+      toast.error("Error saving form");
     } finally {
       setSaving(false);
     }
