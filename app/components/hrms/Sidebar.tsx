@@ -41,26 +41,26 @@ const leaveItems = [
 ];
 
 const secondaryItems = [
-  {
-    name: "Payroll",
-    icon: "M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z M12 2a10 10 0 100 20 10 10 0 000-20z",
-    path: "/payroll",
-  },
+// {
+//   name: "Payroll",
+//   icon: "M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z M12 2a10 10 0 100 20 10 10 0 000-20z",
+//   path: "/payroll",
+// },
   {
     name: "Forms",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
     path: "/forms",
   },
-  {
-    name: "Performance",
-    icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
-    path: "/501",
-  },
-  {
-    name: "Recruitment",
-    icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
-    path: "/501",
-  },
+// {
+//   name: "Performance",
+//   icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
+//   path: "/501",
+// },
+// {
+//   name: "Recruitment",
+//   icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+//   path: "/501",
+// },
 ];
 
 export default function Sidebar() {

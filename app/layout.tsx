@@ -14,7 +14,7 @@ export default function RootLayout({
         <AuthProvider>
           <ConfirmationProvider>
             {children}
-            <Toaster position="top-right" richColors closeButton />
+            <Toaster position="top-right" richColors  />
           </ConfirmationProvider>
         </AuthProvider>
       </body>
