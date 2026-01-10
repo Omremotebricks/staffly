@@ -1,7 +1,6 @@
-"use client";
-
 import { useState } from "react";
 import { LeaveRequest } from "../types";
+import { useAuth } from "../lib/auth";
 
 interface LeaveRequestsListProps {
   requests: LeaveRequest[];
@@ -16,6 +15,7 @@ export default function LeaveRequestsList({
   onReject,
   canManage,
 }: LeaveRequestsListProps) {
+  const { user } = useAuth();
   const ENTRIES_PER_PAGE = 5;
   const [filter, setFilter] = useState<
     "all" | "pending" | "approved" | "rejected"
@@ -114,6 +114,24 @@ export default function LeaveRequestsList({
     startIndex + ENTRIES_PER_PAGE
   );
 
+  // Business Rule: Check if current user can approve/reject this specific request
+  const canUserApprove = (request: LeaveRequest) => {
+    if (!user || request.status !== "pending") return false;
+
+    // 1. Cannot self-approve
+    if (user.employeeCode === request.employeeCode) return false;
+
+    // 2. Admin can approve anything else
+    if (user.role === "admin") return true;
+
+    // 3. HR can only approve 'employee' role requests
+    if (user.role === "hr") {
+      return request.employeeRole === "employee";
+    }
+
+    return false;
+  };
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -187,8 +205,11 @@ export default function LeaveRequestsList({
                           <div className="text-sm font-bold text-[var(--color-text-primary)]">
                             {request.employeeName}
                           </div>
-                          <div className="text-xs text-[var(--color-text-secondary)]">
-                            {request.department}
+                          <div className="text-xs text-[var(--color-text-secondary)] font-medium">
+                            {request.department} •{" "}
+                            <span className="uppercase text-[var(--color-text-muted)]">
+                              {request.employeeRole}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -230,7 +251,7 @@ export default function LeaveRequestsList({
                         className="px-6 py-4 whitespace-nowrap text-right"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {request.status === "pending" && (
+                        {canUserApprove(request) ? (
                           <div className="flex justify-end gap-3">
                             <button
                               onClick={() => onApprove(request.id)}
@@ -245,6 +266,14 @@ export default function LeaveRequestsList({
                               Reject
                             </button>
                           </div>
+                        ) : (
+                          request.status === "pending" && (
+                            <span className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-muted)] bg-[var(--color-bg-main)] px-2 py-1 rounded border border-[var(--color-border)] italic">
+                              {request.employeeCode === user?.employeeCode
+                                ? "Self-Approval Restricted"
+                                : "Limited Access"}
+                            </span>
+                          )
                         )}
                       </td>
                     )}
@@ -272,7 +301,10 @@ export default function LeaveRequestsList({
                         {request.employeeName}
                       </div>
                       <div className="text-xs text-[var(--color-text-secondary)]">
-                        {request.department} • {request.employeeCode}
+                        {request.department} •{" "}
+                        <span className="uppercase">
+                          {request.employeeRole}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -323,23 +355,34 @@ export default function LeaveRequestsList({
                     className="flex gap-3 mt-4 pt-4 border-t border-[var(--color-border)]"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      onClick={() => onApprove(request.id)}
-                      className="flex-1 py-2 bg-green-50 text-green-700 font-bold rounded-[var(--radius-md)] border border-green-200 hover:bg-green-100 transition-colors"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleRejectTrigger(request.id)}
-                      className="flex-1 py-2 bg-red-50 text-red-700 font-bold rounded-[var(--radius-md)] border border-red-200 hover:bg-red-100 transition-colors"
-                    >
-                      Reject
-                    </button>
+                    {canUserApprove(request) ? (
+                      <>
+                        <button
+                          onClick={() => onApprove(request.id)}
+                          className="flex-1 py-2 bg-green-50 text-green-700 font-bold rounded-[var(--radius-md)] border border-green-200 hover:bg-green-100 transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRejectTrigger(request.id)}
+                          className="flex-1 py-2 bg-red-50 text-red-700 font-bold rounded-[var(--radius-md)] border border-red-200 hover:bg-red-100 transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <div className="w-full text-center py-2 bg-[var(--color-bg-main)] rounded-md border text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] italic">
+                        {request.employeeCode === user?.employeeCode
+                          ? "Self-Approval Restricted"
+                          : "Management Only"}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             ))}
           </div>
+
           {/* Details Modal */}
           {selectedRequest && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
@@ -404,7 +447,10 @@ export default function LeaveRequestsList({
                       </h4>
                       <p className="text-sm text-[var(--color-text-secondary)]">
                         {selectedRequest.department} •{" "}
-                        {selectedRequest.employeeCode}
+                        {selectedRequest.employeeCode} •{" "}
+                        <span className="uppercase font-bold">
+                          {selectedRequest.employeeRole}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -459,24 +505,34 @@ export default function LeaveRequestsList({
                 {/* Modal Footer (Admin Actions) */}
                 {canManage && selectedRequest.status === "pending" && (
                   <div className="p-4 bg-[var(--color-bg-main)] border-t border-[var(--color-border)] flex gap-3">
-                    <button
-                      onClick={() => {
-                        onApprove(selectedRequest.id);
-                        setSelectedRequest(null);
-                      }}
-                      className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-[var(--radius-md)] hover:bg-green-700 transition-colors shadow-sm"
-                    >
-                      Approve Request
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleRejectTrigger(selectedRequest.id);
-                        setSelectedRequest(null);
-                      }}
-                      className="flex-1 py-2.5 bg-white text-red-600 border border-red-200 font-bold rounded-[var(--radius-md)] hover:bg-red-50 transition-colors"
-                    >
-                      Reject Request
-                    </button>
+                    {canUserApprove(selectedRequest) ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            onApprove(selectedRequest.id);
+                            setSelectedRequest(null);
+                          }}
+                          className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-[var(--radius-md)] hover:bg-green-700 transition-colors shadow-sm"
+                        >
+                          Approve Request
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleRejectTrigger(selectedRequest.id);
+                            setSelectedRequest(null);
+                          }}
+                          className="flex-1 py-2.5 bg-white text-red-600 border border-red-200 font-bold rounded-[var(--radius-md)] hover:bg-red-50 transition-colors"
+                        >
+                          Reject Request
+                        </button>
+                      </>
+                    ) : (
+                      <div className="w-full text-center py-3 bg-[var(--color-bg-main)] rounded-xl border border-dashed text-xs font-black uppercase tracking-widest text-[var(--color-text-muted)]">
+                        {selectedRequest.employeeCode === user?.employeeCode
+                          ? "Self-Approval Restricted"
+                          : "Administrative Approval Required"}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
