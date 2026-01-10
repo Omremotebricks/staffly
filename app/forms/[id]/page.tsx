@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Form as FormType } from "../../types/forms";
 import FormRenderer from "../../components/form-builder/FormRenderer";
 import Loader from "../../components/Loader";
+import AppShell from "../../components/hrms/AppShell";
 
 export default function SubmitFormPage() {
   const params = useParams();
@@ -29,8 +30,10 @@ export default function SubmitFormPage() {
   if (!form) return <div className="p-6">Form not found</div>;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <FormRenderer form={form} />
-    </div>
+    <AppShell title={form.title}>
+      <div className="max-w-4xl mx-auto py-8">
+        <FormRenderer form={form} />
+      </div>
+    </AppShell>
   );
 }

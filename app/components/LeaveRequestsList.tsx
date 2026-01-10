@@ -16,23 +16,36 @@ export default function LeaveRequestsList({
   onReject,
   canManage,
 }: LeaveRequestsListProps) {
+  const ENTRIES_PER_PAGE = 5;
   const [filter, setFilter] = useState<
     "all" | "pending" | "approved" | "rejected"
   >("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(
     null
   );
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(
+    null
+  );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "rejected":
-        return "bg-red-100 text-red-700 border-red-200";
-      default:
-        return "bg-yellow-100 text-yellow-700 border-yellow-200";
-    }
+  const handleFilterChange = (f: any) => {
+    setFilter(f);
+    setCurrentPage(1);
   };
+
+  const statusColors: { [key: string]: string } = {
+    approved:
+      "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800",
+    rejected:
+      "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800",
+    pending:
+      "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800",
+  };
+
+  const getStatusColor = (status: string) =>
+    statusColors[status] || statusColors.pending;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -75,15 +88,30 @@ export default function LeaveRequestsList({
     }
   };
 
-  const handleReject = (id: string) => {
-    const reason = prompt("Please provide a reason for rejection:");
-    if (reason) {
-      onReject(id, reason);
+  const handleRejectTrigger = (id: string) => {
+    setRejectingRequestId(id);
+    setRejectReason("");
+    setShowRejectModal(true);
+  };
+
+  const confirmRejection = () => {
+    if (rejectingRequestId && rejectReason.trim()) {
+      onReject(rejectingRequestId, rejectReason);
+      setShowRejectModal(false);
+      setRejectingRequestId(null);
+      setRejectReason("");
     }
   };
 
   const filteredRequests = requests.filter((req) =>
     filter === "all" ? true : req.status === filter
+  );
+
+  const totalPages = Math.ceil(filteredRequests.length / ENTRIES_PER_PAGE);
+  const startIndex = (currentPage - 1) * ENTRIES_PER_PAGE;
+  const paginatedRequests = filteredRequests.slice(
+    startIndex,
+    startIndex + ENTRIES_PER_PAGE
   );
 
   return (
@@ -93,11 +121,11 @@ export default function LeaveRequestsList({
         {["all", "pending", "approved", "rejected"].map((f) => (
           <button
             key={f}
-            onClick={() => setFilter(f as any)}
-            className={`px-4 py-2 rounded-[var(--radius-full)] text-sm font-bold capitalize transition-all ${
+            onClick={() => handleFilterChange(f as any)}
+            className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-all border ${
               filter === f
-                ? "bg-[var(--color-primary)] text-white shadow-md"
-                : "bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-main)]"
+                ? "bg-[var(--color-primary)] text-white shadow-md border-[var(--color-primary)]"
+                : "bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-main)]"
             }`}
           >
             {f}
@@ -124,27 +152,27 @@ export default function LeaveRequestsList({
             <table className="min-w-full divide-y divide-[var(--color-border)]">
               <thead className="bg-[var(--color-bg-main)]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-black text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Employee
+                  <th className="px-6 py-5 text-left text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-widest border-b border-[var(--color-border)]">
+                    Employee Asset
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-black text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Type
+                  <th className="px-6 py-5 text-left text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-widest border-b border-[var(--color-border)]">
+                    Leave Framework
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-black text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Dates
+                  <th className="px-6 py-5 text-left text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-widest border-b border-[var(--color-border)]">
+                    Temporal Range
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-black text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-5 text-left text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-widest border-b border-[var(--color-border)]">
+                    Operational Status
                   </th>
                   {canManage && (
-                    <th className="px-6 py-4 text-right text-xs font-black text-[var(--color-text-muted)] uppercase tracking-wider">
-                      Actions
+                    <th className="px-6 py-5 text-right text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-widest border-b border-[var(--color-border)]">
+                      Management Actions
                     </th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
-                {filteredRequests.map((request) => (
+                {paginatedRequests.map((request) => (
                   <tr
                     key={request.id}
                     onClick={() => setSelectedRequest(request)}
@@ -203,20 +231,18 @@ export default function LeaveRequestsList({
                         onClick={(e) => e.stopPropagation()}
                       >
                         {request.status === "pending" && (
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-3">
                             <button
                               onClick={() => onApprove(request.id)}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-md transition-colors"
-                              title="Approve"
+                              className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-[var(--radius-md)] text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all shadow-sm"
                             >
-                              <span className="text-lg">✓</span>
+                              Approve
                             </button>
                             <button
-                              onClick={() => handleReject(request.id)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                              title="Reject"
+                              onClick={() => handleRejectTrigger(request.id)}
+                              className="px-3 py-1.5 bg-white text-rose-600 border border-rose-100 rounded-[var(--radius-md)] text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all shadow-sm"
                             >
-                              <span className="text-lg">✕</span>
+                              Reject
                             </button>
                           </div>
                         )}
@@ -230,7 +256,7 @@ export default function LeaveRequestsList({
 
           {/* Mobile Card View */}
           <div className="md:hidden space-y-4">
-            {filteredRequests.map((request) => (
+            {paginatedRequests.map((request) => (
               <div
                 key={request.id}
                 onClick={() => setSelectedRequest(request)}
@@ -267,7 +293,7 @@ export default function LeaveRequestsList({
                     </p>
                     <div>
                       <span
-                        className={`text-xs font-bold px-2 py-1 rounded-[var(--radius-sm)] border ${getLeaveTypeStyle(
+                        className={`text-xs font-bold px-2 py-1 rounded-full border ${getLeaveTypeStyle(
                           request.leaveType
                         )}`}
                       >
@@ -304,7 +330,7 @@ export default function LeaveRequestsList({
                       Approve
                     </button>
                     <button
-                      onClick={() => handleReject(request.id)}
+                      onClick={() => handleRejectTrigger(request.id)}
                       className="flex-1 py-2 bg-red-50 text-red-700 font-bold rounded-[var(--radius-md)] border border-red-200 hover:bg-red-100 transition-colors"
                     >
                       Reject
@@ -329,7 +355,7 @@ export default function LeaveRequestsList({
                   </h3>
                   <button
                     onClick={() => setSelectedRequest(null)}
-                    className="p-2 rounded-full hover:bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] transition-colors"
+                    className="p-2 rounded-full hover:bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] transition-colors border border-transparent hover:border-[var(--color-border)]"
                   >
                     ✕
                   </button>
@@ -390,7 +416,7 @@ export default function LeaveRequestsList({
                         Leave Type
                       </p>
                       <span
-                        className={`text-sm font-bold px-2 py-0.5 rounded-[var(--radius-sm)] border ${getLeaveTypeStyle(
+                        className={`text-sm font-bold px-2 py-0.5 rounded-full border ${getLeaveTypeStyle(
                           selectedRequest.leaveType
                         )}`}
                       >
@@ -444,7 +470,7 @@ export default function LeaveRequestsList({
                     </button>
                     <button
                       onClick={() => {
-                        handleReject(selectedRequest.id);
+                        handleRejectTrigger(selectedRequest.id);
                         setSelectedRequest(null);
                       }}
                       className="flex-1 py-2.5 bg-white text-red-600 border border-red-200 font-bold rounded-[var(--radius-md)] hover:bg-red-50 transition-colors"
@@ -453,6 +479,81 @@ export default function LeaveRequestsList({
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+          {/* Footer Navigation */}
+          <div className="px-8 py-6 border-t border-[var(--color-border)] bg-[var(--color-bg-main)]/30 flex items-center justify-between">
+            <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] font-black">
+              Showing {Math.min(startIndex + 1, filteredRequests.length)} -{" "}
+              {Math.min(startIndex + ENTRIES_PER_PAGE, filteredRequests.length)}{" "}
+              of {filteredRequests.length} identified requests
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-[var(--color-border)] rounded-[var(--radius-md)] text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] disabled:opacity-30 transition-all shadow-sm"
+              >
+                Prev Batch
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-4 py-2 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[10px] font-black uppercase tracking-widest text-[var(--color-text-primary)] hover:border-[var(--color-primary)] disabled:opacity-30 transition-all shadow-sm"
+              >
+                Next Batch
+              </button>
+            </div>
+          </div>
+
+          {/* Rejection Modal */}
+          {showRejectModal && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-300"
+                onClick={() => setShowRejectModal(false)}
+              />
+              <div className="relative bg-[var(--color-bg-card)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-[var(--color-border)] animate-in zoom-in-95 fade-in duration-200">
+                <div className="px-6 py-5 border-b border-[var(--color-border)] bg-[var(--color-bg-main)]">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-rose-600 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+                    Reject Application
+                  </h3>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] mb-2 block px-1">
+                      Reason for Rejection
+                    </label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Please specify why this request is being declined..."
+                      className="w-full h-32 px-4 py-3 bg-[var(--color-bg-main)] border border-[var(--color-border)] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-rose-100 focus:border-rose-400 transition-all resize-none placeholder:text-[var(--color-text-muted)]/50"
+                    />
+                    <p className="text-[10px] mt-2 text-[var(--color-text-muted)] italic px-1">
+                      Required for official record keeping
+                    </p>
+                  </div>
+                </div>
+                <div className="p-4 bg-[var(--color-bg-main)] border-t border-[var(--color-border)] flex gap-3">
+                  <button
+                    onClick={() => setShowRejectModal(false)}
+                    className="flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-full hover:bg-[var(--color-bg-card)] transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmRejection}
+                    disabled={!rejectReason.trim()}
+                    className="flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest bg-rose-600 text-white rounded-full hover:bg-rose-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Confirm Reject
+                  </button>
+                </div>
               </div>
             </div>
           )}

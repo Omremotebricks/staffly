@@ -35,7 +35,137 @@ export default function FormsManagement({
     loadForms();
   }, [loadForms]);
 
+  const getFormIcon = (title: string, iconName?: string) => {
+    const name = (iconName || title).toLowerCase();
+    if (
+      name.includes("asset") ||
+      name.includes("equipment") ||
+      name.includes("hardware")
+    ) {
+      return (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+          />
+        </svg>
+      );
+    }
+    if (
+      name.includes("survey") ||
+      name.includes("feedback") ||
+      name.includes("review")
+    ) {
+      return (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 5h8M11 12h8M11 19h8M5 6h.01M5 12h.01M5 18h.01"
+          />
+        </svg>
+      );
+    }
+    if (
+      name.includes("travel") ||
+      name.includes("expense") ||
+      name.includes("claim")
+    ) {
+      return (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      );
+    }
+    if (
+      name.includes("onboarding") ||
+      name.includes("hiring") ||
+      name.includes("recruit")
+    ) {
+      return (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+          />
+        </svg>
+      );
+    }
+    if (
+      name.includes("event") ||
+      name.includes("request") ||
+      name.includes("booking")
+    ) {
+      return (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      );
+    }
+    return (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+        />
+      </svg>
+    );
+  };
+
   const handlePublish = async (formId: string) => {
+    const form = forms.find((f) => f.id === formId);
+    if (form && (!form.fields || form.fields.length === 0)) {
+      toast.error("Cannot publish an empty form. Please add fields first.");
+      return;
+    }
+
     const confirmed = await askConfirm({
       title: "Confirm Publication",
       message:
@@ -138,18 +268,35 @@ export default function FormsManagement({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-[var(--color-bg-card)] p-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]">
-        <div>
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
-            Enterprise Dynamic Forms
-          </h3>
-          <p className="text-xs text-[var(--color-text-secondary)] font-medium">
-            Create and manage custom data collection forms.
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-bg-card)] p-6 rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-[var(--radius-lg)] shadow-sm">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-[var(--color-text-primary)]">
+              Enterprise Form Management
+            </h3>
+            <p className="text-xs text-[var(--color-text-secondary)] font-medium">
+              Create, configure, and monitor dynamic data collection assets.
+            </p>
+          </div>
         </div>
         <Link
           href="/forms/builder"
-          className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-[var(--radius-md)] text-sm font-bold shadow-sm hover:bg-[var(--color-primary-hover)] transition-all flex items-center gap-2"
+          className="bg-[var(--color-primary)] text-white px-6 py-2.5 rounded-[var(--radius-md)] text-sm font-black shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-[var(--color-primary-hover)] transition-all flex items-center justify-center gap-2"
         >
           <svg
             className="w-4 h-4"
@@ -170,12 +317,12 @@ export default function FormsManagement({
 
       <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] overflow-hidden">
         {/* Mobile View: Cards */}
-        <div className="md:hidden divide-y divide-gray-100">
+        <div className="md:hidden divide-y divide-[var(--color-border)]">
           {forms.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="p-10 text-center">
+              <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
                 <svg
-                  className="w-6 h-6 text-slate-400"
+                  className="w-8 h-8 text-slate-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -188,47 +335,93 @@ export default function FormsManagement({
                   />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-[var(--color-text-muted)]">
-                No forms created yet.
+              <p className="text-sm font-bold text-[var(--color-text-muted)] uppercase tracking-widest">
+                No forms created yet
               </p>
             </div>
           ) : (
             forms.map((form) => (
-              <div
-                key={form.id}
-                className="p-4 space-y-4 border-b border-[var(--color-border)]"
-              >
-                <div className="flex justify-between items-start">
+              <div key={form.id} className="p-5 space-y-5">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0 border border-slate-100 dark:border-slate-700">
+                    {getFormIcon(form.title, form.icon)}
+                  </div>
                   <div>
-                    <div className="font-bold text-[var(--color-text-primary)]">
+                    <div className="font-black text-[var(--color-text-primary)] text-base">
                       {form.title}
                     </div>
-                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                      {form.description}
+                    <div className="text-xs text-[var(--color-text-secondary)] font-medium mt-1 leading-relaxed">
+                      {form.description || "No description provided."}
                     </div>
                   </div>
                   <span
-                    className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full ${
+                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${
                       form.status === "published"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-amber-100 text-amber-700"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                        : "bg-amber-50 text-amber-700 border-amber-100"
                     }`}
                   >
                     {form.status}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+
+                <div className="flex bg-[var(--color-bg-main)] p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] divide-x divide-[var(--color-border)]">
+                  <div className="flex-1 text-center">
+                    <p className="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-widest">
+                      Fields
+                    </p>
+                    <p className="font-bold text-[var(--color-text-primary)]">
+                      {form.fields?.length || 0}
+                    </p>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <p className="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-widest">
+                      Responses
+                    </p>
+                    <p className="font-bold text-[var(--color-text-primary)]">
+                      -
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <Link
                     href={`/forms/builder?id=${form.id}`}
-                    className="flex-1 text-center py-2 bg-[var(--color-bg-main)] border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)]"
+                    className="flex items-center justify-center gap-2 py-2.5 bg-white dark:bg-slate-800 border border-[var(--color-border)] rounded-[var(--radius-md)] text-[10px] font-black uppercase tracking-widest text-[var(--color-text-primary)] hover:bg-slate-50 transition-all"
                   >
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
                     Edit
                   </Link>
                   <Link
                     href={`/forms/${form.id}/submissions`}
-                    className="flex-1 text-center py-2 bg-indigo-50 border border-indigo-100 rounded-[var(--radius-sm)] text-[10px] font-bold uppercase tracking-wider text-indigo-600"
+                    className="flex items-center justify-center gap-2 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-[var(--radius-md)] text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 transition-all"
                   >
-                    Submissions
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Reports
                   </Link>
                 </div>
               </div>
@@ -238,101 +431,183 @@ export default function FormsManagement({
 
         {/* Desktop View: Table */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left">
             <thead className="bg-[var(--color-bg-main)] text-[var(--color-text-muted)] uppercase text-[10px] font-black tracking-widest border-b border-[var(--color-border)]">
               <tr>
-                <th className="px-6 py-4">Form Title</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Fields</th>
-                <th className="px-6 py-4">Created Date</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-5">Asset Identification</th>
+                <th className="px-6 py-5">Status</th>
+                <th className="px-6 py-5">Infrastructure</th>
+                <th className="px-6 py-5">Created On</th>
+                <th className="px-6 py-5 text-right">Operational Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[var(--color-border)]">
               {forms.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-10 text-center text-gray-500"
+                    className="px-6 py-16 text-center text-[var(--color-text-muted)] font-bold italic"
                   >
-                    No forms created yet.
+                    No enterprise form assets currently synchronized.
                   </td>
                 </tr>
               ) : (
                 forms.map((form) => (
-                  <tr key={form.id} className="hover:bg-gray-50">
+                  <tr
+                    key={form.id}
+                    className="hover:bg-[var(--color-bg-main)]/50 transition-colors"
+                  >
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {form.title}
-                      </div>
-                      <div className="text-xs text-gray-500 line-clamp-1">
-                        {form.description || "No description"}
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0 border border-slate-100 dark:border-slate-700 group-hover:bg-[var(--color-primary-light)] group-hover:text-[var(--color-primary)] transition-colors">
+                          {getFormIcon(form.title, form.icon)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-[var(--color-text-primary)] truncate">
+                            {form.title}
+                          </div>
+                          <div className="text-[10px] text-[var(--color-text-secondary)] font-medium truncate max-w-[200px]">
+                            {form.description ||
+                              "No metadata description provided."}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                        className={`inline-flex px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${
                           form.status === "published"
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                             : form.status === "draft"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
+                            ? "bg-amber-50 text-amber-700 border-amber-100"
+                            : "bg-slate-100 text-slate-700 border-slate-200"
                         }`}
                       >
                         {form.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500">
-                      {form.fields?.length || 0} fields
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-[var(--color-text-primary)]">
+                          {form.fields?.length || 0}
+                        </span>
+                        <span className="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-wider">
+                          Parameters
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
-                      {new Date(form.created_at).toLocaleDateString()}
+                    <td className="px-6 py-4 text-[var(--color-text-secondary)] text-xs font-bold whitespace-nowrap">
+                      {new Date(form.created_at).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-4 justify-end">
                         <Link
                           href={`/forms/builder?id=${form.id}`}
-                          className={`text-indigo-600 hover:text-indigo-700 text-xs font-bold uppercase tracking-wider transition-all ${
-                            actionLoading === form.id
-                              ? "opacity-50 pointer-events-none"
-                              : ""
-                          }`}
+                          title="Configuration"
+                          className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
                         >
-                          Edit
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
                         </Link>
+
                         {form.status === "draft" ? (
                           <button
                             onClick={() => handlePublish(form.id)}
                             disabled={actionLoading === form.id}
-                            className="text-emerald-600 hover:text-emerald-700 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+                            title="Deploy to Enterprise"
+                            className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-all disabled:opacity-50"
                           >
-                            {actionLoading === form.id ? "..." : "Publish"}
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
                           </button>
                         ) : (
                           <button
                             onClick={() => handleUnpublish(form.id)}
                             disabled={actionLoading === form.id}
-                            className="text-amber-600 hover:text-amber-700 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+                            title="Deactivate Asset"
+                            className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-md transition-all disabled:opacity-50"
                           >
-                            {actionLoading === form.id ? "..." : "Unpublish"}
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
                           </button>
                         )}
+
                         <Link
                           href={`/forms/${form.id}/submissions`}
-                          className={`text-slate-600 hover:text-slate-800 text-xs font-bold uppercase tracking-wider transition-all ${
-                            actionLoading === form.id
-                              ? "opacity-50 pointer-events-none"
-                              : ""
-                          }`}
+                          title="Data Analytics"
+                          className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-md transition-all"
                         >
-                          Reports
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
                         </Link>
+
                         <button
                           onClick={() => handleDelete(form.id)}
                           disabled={actionLoading === form.id}
-                          className="text-red-600 hover:text-red-700 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+                          title="Purge Asset"
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-all disabled:opacity-50"
                         >
-                          {actionLoading === form.id ? "..." : "Delete"}
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
                         </button>
                       </div>
                     </td>

@@ -34,6 +34,7 @@ export interface FormSettings {
 export interface Form {
   id: string;
   title: string;
+  icon?: string;
   description?: string;
   fields: FormField[];
   settings: FormSettings;

@@ -75,16 +75,16 @@ const recentEmployees = [
 export default function DashboardPage() {
   return (
     <AppShell title="Dashboard">
-      <div className="space-y-[var(--spacing-xl)]">
+      <div className="space-y-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[var(--spacing-lg)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-[var(--color-bg-card)] p-[var(--spacing-lg)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-shadow"
+              className="bg-[var(--color-bg-card)] p-6 rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:shadow-md transition-all duration-300 group"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-[var(--color-primary-light)] rounded-[var(--radius-md)] text-[var(--color-primary)]">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -99,75 +99,93 @@ export default function DashboardPage() {
                     />
                   </svg>
                 </div>
-                <span
-                  className={`text-xs font-medium ${
-                    stat.change.startsWith("+")
-                      ? "text-[var(--color-success)]"
-                      : stat.change === "0%"
-                      ? "text-[var(--color-text-muted)]"
-                      : "text-[var(--color-error)]"
-                  }`}
-                >
-                  {stat.change}
-                </span>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--color-bg-main)] border border-[var(--color-border)]">
+                  <span
+                    className={`text-[10px] font-black tracking-tighter ${
+                      stat.change.startsWith("+")
+                        ? "text-emerald-600"
+                        : stat.change === "0%"
+                        ? "text-slate-400"
+                        : "text-rose-600"
+                    }`}
+                  >
+                    {stat.change}
+                  </span>
+                </div>
               </div>
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)]">
                 {stat.label}
               </p>
-              <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
+              <h3 className="text-2xl font-black mt-1 text-[var(--color-text-primary)] tabular-nums">
+                {stat.value}
+              </h3>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-[var(--spacing-lg)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Table Section */}
-          <div className="lg:col-span-2 bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] overflow-hidden">
-            <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
-              <h4 className="font-semibold">Recent Employees</h4>
-              <button className="text-sm text-[var(--color-primary)] font-medium hover:underline">
-                View All
+          <div className="lg:col-span-2 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] overflow-hidden">
+            <div className="px-8 py-6 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-main)]/30">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-text-primary)]">
+                Recent Joiners
+              </h4>
+              <button className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 transition-colors bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                View Directory
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-separate border-spacing-0">
                 <thead>
-                  <tr className="bg-[var(--color-bg-main)] text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
-                    <th className="px-6 py-3 font-semibold">Employee</th>
-                    <th className="px-6 py-3 font-semibold">Department</th>
-                    <th className="px-6 py-3 font-semibold">Role</th>
-                    <th className="px-6 py-3 font-semibold">Status</th>
+                  <tr className="bg-[var(--color-bg-main)]/50">
+                    <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
+                      Employee
+                    </th>
+                    <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
+                      Dept • Role
+                    </th>
+                    <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
                   {recentEmployees.map((emp) => (
                     <tr
                       key={emp.id}
-                      className="hover:bg-[var(--color-bg-main)] transition-colors"
+                      className="group hover:bg-[var(--color-bg-main)]/50 transition-colors"
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-sm ring-2 ring-white dark:ring-slate-800">
                             {emp.avatar}
                           </div>
                           <div>
-                            <p className="text-sm font-medium">{emp.name}</p>
+                            <p className="text-sm font-bold text-[var(--color-text-primary)]">
+                              {emp.name}
+                            </p>
+                            <p className="text-[10px] text-[var(--color-text-muted)] font-medium">
+                              ID: EMP-{emp.id}0924
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
-                        {emp.department}
+                      <td className="px-8 py-5">
+                        <div className="text-xs font-bold text-[var(--color-text-secondary)]">
+                          {emp.department}
+                        </div>
+                        <div className="text-[10px] text-[var(--color-text-muted)] font-medium uppercase tracking-wider">
+                          {emp.role}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
-                        {emp.role}
-                      </td>
-                      <td className="px-6 py-4">
+                      <td className="px-8 py-5">
                         <span
-                          className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
                             emp.status === "Active"
-                              ? "bg-green-100 text-green-700"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
                               : emp.status === "On Leave"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-blue-100 text-blue-700"
+                              ? "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400"
+                              : "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400"
                           }`}
                         >
                           {emp.status}
@@ -181,25 +199,36 @@ export default function DashboardPage() {
           </div>
 
           {/* Sidebar Widgets Section */}
-          <div className="space-y-[var(--spacing-lg)]">
-            <div className="bg-[var(--color-bg-card)] p-6 rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]">
-              <h4 className="font-semibold mb-4">Upcoming Birthdays</h4>
-              <div className="space-y-4">
+          <div className="space-y-8">
+            <div className="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-main)]/30">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-text-primary)]">
+                  Upcoming Birthdays
+                </h4>
+              </div>
+              <div className="p-6 space-y-5">
                 {[
                   { name: "John Doe", date: "Today", avatar: "JD" },
                   { name: "Jane Smith", date: "Tomorrow", avatar: "JS" },
                 ].map((item) => (
                   <div
                     key={item.name}
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-between group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[var(--color-border)] text-xs flex items-center justify-center font-bold">
+                      <div className="w-9 h-9 rounded-full bg-[var(--color-bg-main)] border border-[var(--color-border)] text-xs flex items-center justify-center font-black group-hover:border-indigo-300 group-hover:text-indigo-600 transition-colors">
                         {item.avatar}
                       </div>
-                      <p className="text-sm font-medium">{item.name}</p>
+                      <div>
+                        <p className="text-sm font-bold text-[var(--color-text-primary)]">
+                          {item.name}
+                        </p>
+                        <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider font-medium">
+                          Corporate Office
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-xs text-[var(--color-primary)] font-medium bg-[var(--color-primary-light)] px-2 py-0.5 rounded-full">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 animate-pulse">
                       {item.date}
                     </span>
                   </div>
@@ -207,20 +236,26 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-[var(--color-primary)] p-6 rounded-[var(--radius-lg)] text-white relative overflow-hidden">
+            <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 rounded-2xl text-white relative overflow-hidden shadow-xl shadow-indigo-200 dark:shadow-none transition-transform hover:scale-[1.02]">
               <div className="relative z-10">
-                <h4 className="font-semibold mb-1 text-indigo-100">
-                  Annual Review
-                </h4>
-                <p className="text-2xl font-bold mb-4">
-                  Complete your self-assessment
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-5 h-1 bg-white/40 rounded-full" />
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
+                    Annual Review
+                  </h4>
+                </div>
+                <p className="text-xl font-black mb-6 leading-tight">
+                  Complete your
+                  <br />
+                  self-assessment
                 </p>
-                <button className="bg-white text-[var(--color-primary)] px-4 py-2 rounded-[var(--radius-md)] text-sm font-bold hover:bg-indigo-50 transition-colors">
-                  Start Now
+                <button className="w-full bg-white text-indigo-700 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-lg active:scale-95">
+                  Launch Assessment
                 </button>
               </div>
-              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-indigo-400 opacity-20 rounded-full"></div>
-              <div className="absolute bottom-0 left-0 -ml-4 -mb-4 w-16 h-16 bg-indigo-300 opacity-20 rounded-full"></div>
+              {/* Abstract shapes */}
+              <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 bg-indigo-400 opacity-20 rounded-full blur-xl"></div>
             </div>
           </div>
         </div>
