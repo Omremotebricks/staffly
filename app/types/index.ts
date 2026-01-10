@@ -14,6 +14,7 @@ export interface LeaveRequest {
   id: string;
   employeeCode: string;
   employeeName: string;
+  employeeRole?: "employee" | "hr" | "admin";
   department: string;
   hodEmail: string;
   leaveType: "CL" | "PL" | "LWP" | "Comp OFF";
