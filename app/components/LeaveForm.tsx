@@ -7,7 +7,7 @@ import { LeaveRequest, Employee } from "../types";
 
 interface LeaveFormProps {
   onSubmit: (
-    request: Omit<LeaveRequest, "id" | "status" | "appliedDate">
+    request: Omit<LeaveRequest, "id" | "status" | "appliedDate">,
   ) => Promise<void>;
 }
 
@@ -43,11 +43,33 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     }
   };
 
+  const isFetching = useRef(false);
+
   useEffect(() => {
-    if (formData.employeeCode) {
-      getEmployeeByCode(formData.employeeCode).then(setEmployee);
+    if (!formData.employeeCode || isFetching.current) return;
+
+    // optimization: If the code matches the currently logged in user,
+    // we can skip the fetch if we just want basic info, but getEmployeeByCode
+    // might have more details. However, to avoid the "double call" on mount,
+    // we check if we already have the data or if it's the logged in user.
+    if (user && formData.employeeCode === user.employeeCode && !employee) {
+      setEmployee({
+        name: user.name,
+        email: user.email,
+        department: user.department,
+        hodEmail: user.hodEmail || "hr@company.com",
+        code: user.employeeCode,
+      } as any);
+      return;
     }
-  }, [formData.employeeCode]);
+
+    isFetching.current = true;
+    getEmployeeByCode(formData.employeeCode)
+      .then(setEmployee)
+      .finally(() => {
+        isFetching.current = false;
+      });
+  }, [formData.employeeCode, user, employee]);
 
   const numberOfDays =
     formData.fromDate && formData.toDate

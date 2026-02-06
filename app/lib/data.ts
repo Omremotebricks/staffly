@@ -2,28 +2,60 @@ import { supabase } from "../lib/supabase";
 import { Employee, User, LeaveRequest } from "../types";
 import bcrypt from "bcryptjs";
 
-export const getEmployeeByCode = async (
-  code: string
-): Promise<Employee | null> => {
-  const { data, error } = await supabase
-    .from("employees")
-    .select("*")
-    .eq("code", code)
-    .single();
+// --- GLOBAL DATA CACHE (Short TTL) ---
+// Prevents near-simultaneous duplicate calls from different components
+const DATA_CACHE: Record<string, { data: any; timestamp: number }> = {};
+const CACHE_TTL = 5000; // 5 seconds
 
-  if (error) return null;
-  return data;
+const getCachedData = <T>(key: string): T | null => {
+  const cached = DATA_CACHE[key];
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedData = (key: string, data: any) => {
+  DATA_CACHE[key] = { data, timestamp: Date.now() };
+};
+
+// Cache wrapper for async functions
+const withCache = <T>(key: string, fetcher: () => Promise<T>): Promise<T> => {
+  const cached = getCachedData<T>(key);
+  if (cached) return Promise.resolve(cached);
+
+  return fetcher().then((data) => {
+    setCachedData(key, data);
+    return data;
+  });
+};
+// -------------------------------------
+
+export const getEmployeeByCode = async (
+  code: string,
+): Promise<Employee | null> => {
+  return withCache(`emp_${code}`, async () => {
+    const { data, error } = await supabase
+      .from("employees")
+      .select("*")
+      .eq("code", code)
+      .single();
+
+    if (error) return null;
+    return data;
+  });
 };
 
 export const getAllEmployees = async (): Promise<Employee[]> => {
-  const { data, error } = await supabase.from("employees").select("*");
-
-  return error ? [] : data;
+  return withCache("all_employees", async () => {
+    const { data, error } = await supabase.from("employees").select("*");
+    return error ? [] : data;
+  });
 };
 
 export const authenticateUser = async (
   email: string,
-  password: string
+  password: string,
 ): Promise<User | null> => {
   const { data, error } = await supabase
     .from("users")
@@ -53,13 +85,13 @@ export const authenticateUser = async (
 };
 
 export const getUserByEmployeeCode = async (
-  employeeCode: string
+  employeeCode: string,
 ): Promise<User | null> => {
   return null; // Disabled employee code login
 };
 
 export const createLeaveRequest = async (
-  request: Omit<LeaveRequest, "id" | "status" | "appliedDate">
+  request: Omit<LeaveRequest, "id" | "status" | "appliedDate">,
 ): Promise<LeaveRequest | null> => {
   // Ensure hod_email is not null
   const hodEmail = request.hodEmail || "hr@company.com";
@@ -104,51 +136,65 @@ export const createLeaveRequest = async (
 };
 
 export const getLeaveRequests = async (
-  employeeCode?: string
+  employeeCode?: string,
+  users?: User[],
 ): Promise<LeaveRequest[]> => {
-  // Fetch users first to map roles
-  const { data: usersData } = await supabase
-    .from("users")
-    .select("employee_code, role");
-  const userRoleMap: Record<string, string> = {};
-  usersData?.forEach((u) => {
-    userRoleMap[u.employee_code] = u.role;
+  const cacheKey = `leave_reqs_${employeeCode || "all"}`;
+
+  return withCache(cacheKey, async () => {
+    const userRoleMap: Record<string, string> = {};
+
+    if (users) {
+      users.forEach((u) => {
+        userRoleMap[u.employeeCode] = u.role;
+      });
+    } else {
+      // Only fetch users if not provided
+      const { data: usersData } = await supabase
+        .from("users")
+        .select("employee_code, role");
+      usersData?.forEach((u) => {
+        userRoleMap[u.employee_code] = u.role;
+      });
+    }
+
+    let query = supabase.from("leave_requests").select("*");
+
+    if (employeeCode) {
+      query = query.eq("employee_code", employeeCode);
+    }
+
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
+
+    if (error) return [];
+    return data.map((item) => ({
+      id: item.id,
+      employeeCode: item.employee_code,
+      employeeName: item.employee_name,
+      employeeRole: (userRoleMap[item.employee_code] as any) || "employee",
+      department: item.department,
+      hodEmail: item.hod_email,
+      leaveType: item.leave_type,
+      fromDate: item.from_date,
+      toDate: item.to_date,
+      numberOfDays: item.number_of_days,
+      reason: item.reason,
+      status: item.status,
+      appliedDate: item.applied_date,
+      approvedBy: item.approved_by,
+      approvedDate: item.approved_date,
+      rejectionReason: item.rejection_reason,
+    }));
   });
-
-  let query = supabase.from("leave_requests").select("*");
-
-  if (employeeCode) {
-    query = query.eq("employee_code", employeeCode);
-  }
-
-  const { data, error } = await query.order("created_at", { ascending: false });
-
-  if (error) return [];
-  return data.map((item) => ({
-    id: item.id,
-    employeeCode: item.employee_code,
-    employeeName: item.employee_name,
-    employeeRole: (userRoleMap[item.employee_code] as any) || "employee",
-    department: item.department,
-    hodEmail: item.hod_email,
-    leaveType: item.leave_type,
-    fromDate: item.from_date,
-    toDate: item.to_date,
-    numberOfDays: item.number_of_days,
-    reason: item.reason,
-    status: item.status,
-    appliedDate: item.applied_date,
-    approvedBy: item.approved_by,
-    approvedDate: item.approved_date,
-    rejectionReason: item.rejection_reason,
-  }));
 };
 
 export const updateLeaveRequestStatus = async (
   id: string,
   status: "approved" | "rejected",
   approvedBy?: string,
-  rejectionReason?: string
+  rejectionReason?: string,
 ): Promise<boolean> => {
   const updateData: any = {
     status,
@@ -206,22 +252,24 @@ export const createEmployee = async (employee: {
 };
 
 export const getAllUsers = async (): Promise<User[]> => {
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .order("created_at", { ascending: false });
+  return withCache("all_users", async () => {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (error) return [];
-  return data.map((item) => ({
-    id: item.id,
-    employeeCode: item.employee_code,
-    name: item.name,
-    email: item.email,
-    department: item.department,
-    role: item.role,
-    hodEmail: item.hod_email,
-    isActive: item.is_active,
-  }));
+    if (error) return [];
+    return data.map((item) => ({
+      id: item.id,
+      employeeCode: item.employee_code,
+      name: item.name,
+      email: item.email,
+      department: item.department,
+      role: item.role,
+      hodEmail: item.hod_email,
+      isActive: item.is_active,
+    }));
+  });
 };
 
 export const calculateDays = (fromDate: string, toDate: string): number => {

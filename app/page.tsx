@@ -10,6 +10,7 @@ import Login from "./components/Login";
 import { toast } from "sonner";
 import { useToast } from "./components/ToastContext";
 import Loader from "./components/Loader";
+import { useCallback, useRef } from "react";
 
 export default function Home() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -17,28 +18,35 @@ export default function Home() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
+  const isFetching = useRef(false);
 
-  const loadData = async () => {
-    if (!user) return;
+  const loadData = useCallback(async () => {
+    if (!user || isFetching.current) return;
+
+    isFetching.current = true;
     setLoading(true);
     try {
-      const [requests, users] = await Promise.all([
-        getLeaveRequests(
-          user.role === "employee" ? user.employeeCode : undefined
-        ),
-        getAllUsers(),
-      ]);
-      setLeaveRequests(requests);
+      // Step 1: Fetch users first
+      const users = await getAllUsers();
       setAllUsers(users);
+
+      // Step 2: Fetch leave requests using the already fetched users to avoid redundancy
+      const requests = await getLeaveRequests(
+        user.role === "employee" ? user.employeeCode : undefined,
+        users,
+      );
+      setLeaveRequests(requests);
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
-  };
+  }, [user?.id, user?.role, user?.employeeCode]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadData();
+    }
+  }, [user?.id, loadData]);
 
   if (authLoading || (isAuthenticated && loading)) {
     return <Loader fullPage label="Syncing enterprise data..." />;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Form } from "../types/forms";
 import { useAuth } from "../lib/auth";
@@ -10,14 +10,22 @@ export default function FormsList() {
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isFetching = useRef(false);
+
   useEffect(() => {
+    if (isFetching.current) return;
+    isFetching.current = true;
+
     fetch("/api/forms", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setForms(data);
       })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        isFetching.current = false;
+      });
   }, []);
 
   if (loading) return <div className="p-6">Loading forms...</div>;
